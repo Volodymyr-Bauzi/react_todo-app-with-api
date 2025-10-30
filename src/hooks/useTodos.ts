@@ -265,8 +265,10 @@ const useTodos = () => {
         .then(() => {
           setIsEditing(null);
         })
-        .catch(() => {
+        .catch(err => {
           showError(ErrorMessage.UpdatingTodo);
+
+          throw err;
         });
     }
   };
