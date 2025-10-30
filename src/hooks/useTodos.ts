@@ -185,8 +185,10 @@ const useTodos = () => {
             ),
           );
         })
-        .catch(() => {
+        .catch(err => {
           showError(ErrorMessage.UpdatingTodo);
+
+          throw err;
         })
         .finally(() => {
           handleRemoveTodoFromLoading(todoId);
@@ -268,7 +270,7 @@ const useTodos = () => {
         .catch(err => {
           showError(ErrorMessage.UpdatingTodo);
 
-          throw err;
+          throw new Error(err);
         });
     }
   };
