@@ -152,7 +152,6 @@ const useTodos = () => {
     }
 
     setLoadingTodoIds(completedIds);
-    // filter out only resolved todos and keep only failed
     await Promise.all(completedIds.map(id => handleDelete(id)));
     setLoadingTodoIds([]);
   }, [todos, handleDelete]);
@@ -184,11 +183,11 @@ const useTodos = () => {
               todo.id === todoId ? { ...todo, ...fields } : todo,
             ),
           );
+          setIsEditing(null);
         })
-        .catch(err => {
+        .catch(() => {
           showError(ErrorMessage.UpdatingTodo);
-
-          throw err;
+          titleRef.current?.focus();
         })
         .finally(() => {
           handleRemoveTodoFromLoading(todoId);
@@ -248,7 +247,7 @@ const useTodos = () => {
     setIsEditing(todo.id);
   };
 
-  const handleSubmitChanges = (
+  const handleSubmitChanges = async (
     todo: Todo,
     e?: React.FormEvent<HTMLFormElement>,
   ) => {
@@ -256,23 +255,15 @@ const useTodos = () => {
 
     if (title.trim() === todo.title) {
       setIsEditing(null);
-
       return;
     }
 
     if (title.trim() === '') {
       handleDelete(todo.id);
-    } else {
-      handleEditTodo(todo.id, { fields: { title: title.trim() } })
-        .then(() => {
-          setIsEditing(null);
-        })
-        .catch(err => {
-          showError(ErrorMessage.UpdatingTodo);
-
-          throw new Error(err);
-        });
+      return;
     }
+
+    await handleEditTodo(todo.id, { fields: { title: title.trim() } });
   };
 
   const handleKeyUp = (
