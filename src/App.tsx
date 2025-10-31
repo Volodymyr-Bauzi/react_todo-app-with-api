@@ -12,7 +12,6 @@ import useTodos from './hooks/useTodos';
 export const App: React.FC = () => {
   const {
     todos,
-    query,
     status,
     tempTodo,
     todosLeft,
@@ -23,14 +22,13 @@ export const App: React.FC = () => {
     handleSubmit,
     handleDelete,
     getIsTodoLoading,
-    handleQueryChange,
     handleStatusChange,
     handleEditTodo,
     handleToggleAllComplete,
     handleDeleteAllCompleted,
 
     title,
-    titleRef,
+    titleInputRef,
     isEditing,
     setTitle,
     handleKeyUp,
@@ -48,21 +46,19 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <Header
-          todos={todos}
-          query={query}
-          tempTodo={tempTodo}
           addInputRef={addInputRef}
-          onQueryChange={handleQueryChange}
+          todos={todos}
+          tempTodo={tempTodo}
           onSubmit={handleSubmit}
           onToggleAllComplete={handleToggleAllComplete}
         />
 
         <TodoList
+          titleInputRef={titleInputRef}
           todos={filteredTodos}
           tempTodo={tempTodo}
           isEditing={isEditing}
           title={title}
-          titleRef={titleRef}
           onKeyUp={handleKeyUp}
           onDelete={handleDelete}
           isLoading={getIsTodoLoading}

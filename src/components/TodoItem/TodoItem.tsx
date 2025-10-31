@@ -2,9 +2,9 @@ import { Todo } from '../../types/Todo';
 import cn from 'classnames';
 
 export type TodoItemProps = {
+  titleInputRef?: React.RefObject<HTMLInputElement>;
   todo: Todo;
   title?: string;
-  titleRef?: React.RefObject<HTMLInputElement>;
   isLoading: (todoId: Todo['id']) => boolean;
   isEditing?: Todo['id'] | null;
   onDelete?: (todoId: Todo['id']) => void;
@@ -14,14 +14,14 @@ export type TodoItemProps = {
     { fields }: { fields: Partial<Todo> },
   ) => void;
   onToggleSetEditing?: (todo: Todo) => void;
-  onSubmitChanges?: (todo: Todo, e?: React.FormEvent<HTMLFormElement>) => void;
+  onSubmitChanges?: (todo: Todo) => Promise<void>;
   onKeyUp?: (e: React.KeyboardEvent<HTMLInputElement>, todo: Todo) => void;
 };
 
 export const TodoItem: React.FC<TodoItemProps> = ({
+  titleInputRef,
   todo,
   title,
-  titleRef,
   isLoading,
   isEditing,
   onDelete,
@@ -31,6 +31,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onSubmitChanges,
   onKeyUp,
 }) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    onSubmitChanges?.(todo);
+  };
+
   return (
     <div
       key={todo.id}
@@ -52,9 +57,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       </label>
 
       {isEditing === todo.id ? (
-        <form onSubmit={e => onSubmitChanges?.(todo, e)}>
+        <form onSubmit={handleSubmit}>
           <input
-            ref={titleRef}
+            ref={titleInputRef}
             data-cy="TodoTitleField"
             type="text"
             className="todo__title-field"

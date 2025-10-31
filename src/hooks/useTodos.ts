@@ -10,7 +10,6 @@ const useTodos = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [status, setStatus] = useState(StatusFilter.All);
   const [loadingTodoIds, setLoadingTodoIds] = useState<number[]>([]);
-  const [query, setQuery] = useState('');
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
   const [title, setTitle] = useState('');
@@ -19,7 +18,7 @@ const useTodos = () => {
   const { errorMessage, showError, hideError } = useErrors();
 
   const addInputRef = useRef<HTMLInputElement>(null);
-  const titleRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // #endregion
 
@@ -50,7 +49,10 @@ const useTodos = () => {
   // #endregion
 
   // #region Helpers
-  const filteredTodos = getFilteredTodos(todos, { status });
+  const filteredTodos = useMemo(
+    () => getFilteredTodos(todos, { status }),
+    [todos, status],
+  );
 
   const todosLeft = useMemo(
     () => todos.filter(todo => !todo.completed).length,
@@ -59,20 +61,12 @@ const useTodos = () => {
   // #endregion
 
   // #region Handlers
-  const handleQueryChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setQuery(e.target.value);
-    },
-    [],
-  );
-
   const handleStatusChange = useCallback((newStatus: StatusFilter) => {
     setStatus(newStatus);
   }, []);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+    async (query: string, resetInput: () => void) => {
       const normalizedQuery = query.trim();
 
       if (!normalizedQuery) {
@@ -97,7 +91,7 @@ const useTodos = () => {
         });
 
         setTodos(prev => [...prev, newTodo]);
-        setQuery('');
+        resetInput();
       } catch {
         showError(ErrorMessage.AddingTodo);
       } finally {
@@ -105,7 +99,7 @@ const useTodos = () => {
         setLoadingTodoIds([]);
       }
     },
-    [query, showError],
+    [showError],
   );
 
   const handleAddTodoToLoading = useCallback((todoId: Todo['id']) => {
@@ -178,16 +172,16 @@ const useTodos = () => {
           completed: updatedTodo.completed,
         })
         .then(() => {
+          setIsEditing(null);
           setTodos(prev =>
             prev.map(todo =>
               todo.id === todoId ? { ...todo, ...fields } : todo,
             ),
           );
-          setIsEditing(null);
         })
         .catch(() => {
           showError(ErrorMessage.UpdatingTodo);
-          titleRef.current?.focus();
+          titleInputRef.current?.focus();
         })
         .finally(() => {
           handleRemoveTodoFromLoading(todoId);
@@ -195,6 +189,12 @@ const useTodos = () => {
     },
     [todos, showError, handleAddTodoToLoading, handleRemoveTodoFromLoading],
   );
+
+  useEffect(() => {
+    if (titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isEditing]);
 
   const handleToggleAllComplete = useCallback(async () => {
     if (todos.every(t => t.completed)) {
@@ -230,12 +230,6 @@ const useTodos = () => {
     }
   }, [todos, handleEditTodo]);
 
-  useEffect(() => {
-    if (titleRef.current) {
-      titleRef.current.focus();
-    }
-  }, [isEditing]);
-
   const handleToggleSetEditing = (todo: Todo) => {
     if (isEditing === todo.id) {
       setIsEditing(null);
@@ -247,12 +241,7 @@ const useTodos = () => {
     setIsEditing(todo.id);
   };
 
-  const handleSubmitChanges = async (
-    todo: Todo,
-    e?: React.FormEvent<HTMLFormElement>,
-  ) => {
-    e?.preventDefault();
-
+  const handleSubmitChanges = async (todo: Todo) => {
     if (title.trim() === todo.title) {
       setIsEditing(null);
       return;
@@ -278,7 +267,6 @@ const useTodos = () => {
 
   return {
     todos,
-    query,
     status,
     tempTodo,
     todosLeft,
@@ -293,14 +281,13 @@ const useTodos = () => {
 
     handleSubmit,
     handleDelete,
-    handleQueryChange,
     handleStatusChange,
     handleEditTodo,
     handleToggleAllComplete,
     handleDeleteAllCompleted,
 
     title,
-    titleRef,
+    titleInputRef,
     setTitle,
     isEditing,
     handleToggleSetEditing,

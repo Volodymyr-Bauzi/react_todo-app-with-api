@@ -1,26 +1,33 @@
+import { useState } from 'react';
 import { Todo } from '../../types/Todo';
 import cn from 'classnames';
 
 type HeaderProps = {
-  todos: Todo[];
-  query: string;
-  tempTodo: Todo | null;
   addInputRef: React.RefObject<HTMLInputElement>;
-  onQueryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  todos: Todo[];
+  tempTodo: Todo | null;
+  onSubmit: (query: string, resetInput: () => void) => void;
   onToggleAllComplete: () => Promise<void>;
 };
 
 const Header: React.FC<HeaderProps> = ({
-  todos,
-  query,
-  tempTodo,
   addInputRef,
-  onQueryChange,
+  todos,
+  tempTodo,
   onSubmit,
   onToggleAllComplete,
 }) => {
+  const [query, setQuery] = useState('');
+
   const completedTodo = todos?.filter(todo => todo.completed).length;
+
+  const handleSubmit = (
+    e: React.FormEvent<HTMLFormElement>,
+    resetInput: () => void,
+  ) => {
+    e.preventDefault();
+    onSubmit(query, resetInput);
+  };
 
   return (
     <header className="todoapp__header">
@@ -35,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({
         />
       )}
 
-      <form onSubmit={onSubmit}>
+      <form onSubmit={e => handleSubmit(e, () => setQuery(''))}>
         <input
           ref={addInputRef}
           data-cy="NewTodoField"
@@ -43,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({
           className="todoapp__new-todo"
           placeholder="What needs to be done?"
           value={query}
-          onChange={onQueryChange}
+          onChange={e => setQuery(e.target.value)}
           disabled={tempTodo?.id === 0}
         />
       </form>
