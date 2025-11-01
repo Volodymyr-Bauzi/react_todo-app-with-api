@@ -8,7 +8,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
   const [loadingTodoIds, setLoadingTodoIds] = useState<number[]>([]);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
-  // Load todos on mount
   useEffect(() => {
     const loadTodos = async () => {
       showError(ErrorMessage.Null);
@@ -24,7 +23,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
     loadTodos();
   }, []);
 
-  // Helper to manage loading state
   const addToLoading = useCallback((todoId: number) => {
     setLoadingTodoIds(prev => [...prev, todoId]);
   }, []);
@@ -33,7 +31,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
     setLoadingTodoIds(prev => prev.filter(id => id !== todoId));
   }, []);
 
-  // Add a new todo
   const handleSubmit = useCallback(
     async (query: string, resetInput: () => void): Promise<void> => {
       const normalizedQuery = query.trim();
@@ -43,7 +40,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
         return;
       }
 
-      // Clear any existing errors when starting a new request
       showError(ErrorMessage.Null);
 
       const temporaryTodo: Todo = {
@@ -62,10 +58,9 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
         });
 
         setTodos(prev => [...prev, newTodo]);
-        resetInput(); // Only reset on success
+        resetInput();
       } catch {
         showError(ErrorMessage.AddingTodo);
-        // Don't reset input on error - user can try again
       } finally {
         setTempTodo(null);
         setLoadingTodoIds([]);
@@ -74,7 +69,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
     [showError],
   );
 
-  // Delete a todo
   const handleDelete = useCallback(
     async (todoId: number) => {
       addToLoading(todoId);
@@ -91,7 +85,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
     [addToLoading, removeFromLoading, showError],
   );
 
-  // Update a todo
   const handleEditTodo = useCallback(
     async (
       todoId: number,
@@ -125,7 +118,7 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
         );
       } catch {
         showError(ErrorMessage.UpdatingTodo);
-        throw new Error('Failed to update todo'); // Re-throw so component knows it failed
+        throw new Error('Failed to update todo');
       } finally {
         removeFromLoading(todoId);
       }
@@ -133,7 +126,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
     [todos, addToLoading, removeFromLoading, showError],
   );
 
-  // Toggle all todos
   const handleToggleAllComplete = useCallback(async () => {
     if (todos.every(t => t.completed)) {
       const completedIds = todos.map(t => t.id);
@@ -168,7 +160,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
     }
   }, [todos, handleEditTodo]);
 
-  // Delete all completed todos
   const handleDeleteAllCompleted = useCallback(async () => {
     const completedIds = todos.filter(t => t.completed).map(t => t.id);
 
@@ -181,7 +172,6 @@ const useTodoData = (showError: (error: ErrorMessage) => void) => {
     setLoadingTodoIds([]);
   }, [todos, handleDelete]);
 
-  // Check if a todo is loading
   const getIsTodoLoading = useCallback(
     (todoId: number) => {
       return loadingTodoIds.includes(todoId);

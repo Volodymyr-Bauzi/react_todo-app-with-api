@@ -20,7 +20,6 @@ const Header: React.FC<HeaderProps> = ({
   const [query, setQuery] = useState('');
   const addInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input when tempTodo is cleared (after successful add or error)
   useEffect(() => {
     if (!tempTodo || todos.length > 0) {
       addInputRef.current?.focus();
@@ -32,7 +31,6 @@ const Header: React.FC<HeaderProps> = ({
 
     await onSubmit(query, () => setQuery(''));
 
-    // Refocus after submission (success or failure)
     addInputRef.current?.focus();
   };
 

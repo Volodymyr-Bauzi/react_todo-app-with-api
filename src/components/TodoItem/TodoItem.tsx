@@ -22,7 +22,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const [title, setTitle] = useState(todo.title);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input when entering edit mode
   useEffect(() => {
     if (isEditing && titleInputRef.current) {
       titleInputRef.current.focus();
@@ -54,14 +53,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       await onEditTodo(todo.id, { fields: { title: title.trim() } });
       setIsEditing(false);
     } catch {
-      // Keep editing mode and refocus input on error
       titleInputRef.current?.focus();
     }
   };
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
-      // Cancel editing and restore original title
       setTitle(todo.title);
       setIsEditing(false);
     }
