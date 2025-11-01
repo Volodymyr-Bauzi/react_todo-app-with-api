@@ -1,24 +1,21 @@
 import { STATUS_FILTER_OPTIONS, StatusFilter } from '../../types/statusFilter';
 import cn from 'classnames';
-import { Todo } from '../../types/Todo';
 
 type FooterProps = {
-  todos: Todo[];
-  status: StatusFilter;
   todosLeft: number;
-  onDeleteAll: () => void;
+  status: StatusFilter;
+  hasCompletedTodos: boolean;
   onStatusChange: (newStatus: StatusFilter) => void;
+  onDeleteAll: () => void;
 };
 
 export const Footer: React.FC<FooterProps> = ({
-  todos,
-  status,
   todosLeft,
-  onDeleteAll,
+  status,
+  hasCompletedTodos,
   onStatusChange,
+  onDeleteAll,
 }) => {
-  const completedTodo = todos?.filter(todo => todo.completed).length;
-
   return (
     <footer className="todoapp__footer" data-cy="Footer">
       <span className="todo-count" data-cy="TodosCounter">
@@ -26,20 +23,23 @@ export const Footer: React.FC<FooterProps> = ({
       </span>
 
       <nav className="filter" data-cy="Filter">
-        {Object.entries(STATUS_FILTER_OPTIONS).map(
-          ([option, { href, testId, text }]) => (
-            <a
-              key={option}
-              href={href}
-              className={cn('filter__link', {
-                selected: status === option,
-              })}
-              data-cy={testId}
-              onClick={() => onStatusChange(option as StatusFilter)}
-            >
-              {text}
-            </a>
-          ),
+        {(Object.keys(STATUS_FILTER_OPTIONS) as StatusFilter[]).map(
+          filterOption => {
+            const { href, testId, text } = STATUS_FILTER_OPTIONS[filterOption];
+            return (
+              <a
+                key={filterOption}
+                href={href}
+                className={cn('filter__link', {
+                  selected: status === filterOption,
+                })}
+                data-cy={testId}
+                onClick={() => onStatusChange(filterOption)}
+              >
+                {text}
+              </a>
+            );
+          },
         )}
       </nav>
 
@@ -47,8 +47,8 @@ export const Footer: React.FC<FooterProps> = ({
         type="button"
         className="todoapp__clear-completed"
         data-cy="ClearCompletedButton"
+        disabled={!hasCompletedTodos}
         onClick={onDeleteAll}
-        disabled={completedTodo === 0}
       >
         Clear completed
       </button>

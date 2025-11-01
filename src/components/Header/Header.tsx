@@ -1,32 +1,39 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Todo } from '../../types/Todo';
 import cn from 'classnames';
 
 type HeaderProps = {
-  addInputRef: React.RefObject<HTMLInputElement>;
   todos: Todo[];
+  allTodosCompleted: boolean;
   tempTodo: Todo | null;
-  onSubmit: (query: string, resetInput: () => void) => void;
+  onSubmit: (query: string, resetInput: () => void) => Promise<void>;
   onToggleAllComplete: () => Promise<void>;
 };
 
 const Header: React.FC<HeaderProps> = ({
-  addInputRef,
   todos,
+  allTodosCompleted,
   tempTodo,
   onSubmit,
   onToggleAllComplete,
 }) => {
   const [query, setQuery] = useState('');
+  const addInputRef = useRef<HTMLInputElement>(null);
 
-  const completedTodo = todos?.filter(todo => todo.completed).length;
+  // Focus input when tempTodo is cleared (after successful add or error)
+  useEffect(() => {
+    if (!tempTodo || todos.length > 0) {
+      addInputRef.current?.focus();
+    }
+  }, [tempTodo, todos]);
 
-  const handleSubmit = (
-    e: React.FormEvent<HTMLFormElement>,
-    resetInput: () => void,
-  ) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit(query, resetInput);
+
+    await onSubmit(query, () => setQuery(''));
+
+    // Refocus after submission (success or failure)
+    addInputRef.current?.focus();
   };
 
   return (
@@ -35,14 +42,14 @@ const Header: React.FC<HeaderProps> = ({
         <button
           type="button"
           className={cn('todoapp__toggle-all', {
-            active: completedTodo === todos.length,
+            active: allTodosCompleted,
           })}
           data-cy="ToggleAllButton"
           onClick={onToggleAllComplete}
         />
       )}
 
-      <form onSubmit={e => handleSubmit(e, () => setQuery(''))}>
+      <form onSubmit={handleSubmit}>
         <input
           ref={addInputRef}
           data-cy="NewTodoField"

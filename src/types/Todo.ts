@@ -9,20 +9,29 @@ export interface Todo {
 
 export const getFilteredTodos = (
   todos: Todo[],
-  { status }: { status: StatusFilter },
-) => {
-  let filteredTodos = [...todos];
+  status: StatusFilter,
+): Todo[] => {
+  switch (status) {
+    case StatusFilter.Active:
+      return todos.filter(todo => !todo.completed);
 
-  // !switch case
-  if (status !== StatusFilter.All) {
-    filteredTodos = filteredTodos.filter(todo => {
-      if (status === StatusFilter.Completed) {
-        return todo.completed;
-      }
+    case StatusFilter.Completed:
+      return todos.filter(todo => todo.completed);
 
-      return !todo.completed;
-    });
+    case StatusFilter.All:
+    default:
+      return todos;
   }
+};
 
-  return filteredTodos;
+export const countActiveTodos = (todos: Todo[]): number => {
+  return todos.filter(todo => !todo.completed).length;
+};
+
+export const hasCompletedTodos = (todos: Todo[]): boolean => {
+  return todos.some(todo => todo.completed);
+};
+
+export const areAllTodosCompleted = (todos: Todo[]): boolean => {
+  return todos.length > 0 && todos.every(todo => todo.completed);
 };

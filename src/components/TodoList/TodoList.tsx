@@ -4,36 +4,22 @@ import { TodoItem } from '../TodoItem';
 import { createRef, useRef } from 'react';
 
 type TodoListProps = {
-  titleInputRef: React.RefObject<HTMLInputElement>;
   todos: Todo[];
   tempTodo: Todo | null;
-  title: string;
   isLoading: (todoId: Todo['id']) => boolean;
-  isEditing: Todo['id'] | null;
   onDelete: (todoId: Todo['id']) => void;
-  onTitleChange: React.Dispatch<React.SetStateAction<string>>;
   onEditTodo: (
     todoId: Todo['id'],
     { fields }: { fields: Partial<Todo> },
-  ) => void;
-  onToggleSetEditing: (todo: Todo) => void;
-  onSubmitChanges: (todo: Todo) => Promise<void>;
-  onKeyUp: (e: React.KeyboardEvent<HTMLInputElement>, todo: Todo) => void;
+  ) => Promise<void>;
 };
 
 export const TodoList: React.FC<TodoListProps> = ({
-  titleInputRef,
   todos,
   tempTodo,
-  title,
   isLoading,
-  isEditing,
   onDelete,
-  onTitleChange,
   onEditTodo,
-  onToggleSetEditing,
-  onSubmitChanges,
-  onKeyUp,
 }) => {
   const nodeRefs = useRef<Record<number, React.RefObject<HTMLDivElement>>>({});
 
@@ -53,21 +39,12 @@ export const TodoList: React.FC<TodoListProps> = ({
               timeout={300}
               classNames="item"
             >
-              {/* <div ref={nodeRef}> */}
               <TodoItem
-                titleInputRef={titleInputRef}
                 todo={todo}
-                title={title}
                 isLoading={isLoading}
-                isEditing={isEditing}
                 onDelete={onDelete}
-                onTitleChange={onTitleChange}
                 onEditTodo={onEditTodo}
-                onToggleSetEditing={onToggleSetEditing}
-                onSubmitChanges={onSubmitChanges}
-                onKeyUp={onKeyUp}
               />
-              {/* </div> */}
             </CSSTransition>
           );
         })}
@@ -78,13 +55,12 @@ export const TodoList: React.FC<TodoListProps> = ({
             timeout={300}
             classNames="temp-item"
           >
-            <div ref={nodeRefs.current[0]}>
-              <TodoItem
-                todo={tempTodo}
-                isLoading={isLoading}
-                onDelete={() => {}}
-              />
-            </div>
+            <TodoItem
+              todo={tempTodo}
+              isLoading={isLoading}
+              onDelete={() => {}}
+              onEditTodo={async () => {}}
+            />
           </CSSTransition>
         )}
       </TransitionGroup>

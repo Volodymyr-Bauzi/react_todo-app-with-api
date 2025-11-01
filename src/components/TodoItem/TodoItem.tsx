@@ -1,47 +1,79 @@
+import { useState, useRef, useEffect } from 'react';
 import { Todo } from '../../types/Todo';
 import cn from 'classnames';
 
 export type TodoItemProps = {
-  titleInputRef?: React.RefObject<HTMLInputElement>;
   todo: Todo;
-  title?: string;
   isLoading: (todoId: Todo['id']) => boolean;
-  isEditing?: Todo['id'] | null;
-  onDelete?: (todoId: Todo['id']) => void;
-  onTitleChange?: React.Dispatch<React.SetStateAction<string>>;
-  onEditTodo?: (
+  onDelete: (todoId: Todo['id']) => void;
+  onEditTodo: (
     todoId: Todo['id'],
     { fields }: { fields: Partial<Todo> },
-  ) => void;
-  onToggleSetEditing?: (todo: Todo) => void;
-  onSubmitChanges?: (todo: Todo) => Promise<void>;
-  onKeyUp?: (e: React.KeyboardEvent<HTMLInputElement>, todo: Todo) => void;
+  ) => Promise<void>;
 };
 
 export const TodoItem: React.FC<TodoItemProps> = ({
-  titleInputRef,
   todo,
-  title,
   isLoading,
-  isEditing,
   onDelete,
-  onTitleChange,
   onEditTodo,
-  onToggleSetEditing,
-  onSubmitChanges,
-  onKeyUp,
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(todo.title);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input when entering edit mode
+  useEffect(() => {
+    if (isEditing && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  const handleToggleSetEditing = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      return;
+    }
+
+    setTitle(todo.title);
+    setIsEditing(true);
+  };
+
+  const handleSubmitChanges = async () => {
+    if (title.trim() === todo.title) {
+      setIsEditing(false);
+      return;
+    }
+
+    if (title.trim() === '') {
+      await onDelete(todo.id);
+      return;
+    }
+
+    try {
+      await onEditTodo(todo.id, { fields: { title: title.trim() } });
+      setIsEditing(false);
+    } catch {
+      // Keep editing mode and refocus input on error
+      titleInputRef.current?.focus();
+    }
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      // Cancel editing and restore original title
+      setTitle(todo.title);
+      setIsEditing(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmitChanges?.(todo);
+    handleSubmitChanges();
   };
 
   return (
-    <div
-      key={todo.id}
-      data-cy="Todo"
-      className={cn('todo', { completed: todo.completed })}
-    >
+    <div data-cy="Todo" className={cn('todo', { completed: todo.completed })}>
       <label className="todo__status-label">
         <input
           aria-label={`Mark todo "${todo.title}" as completed`}
@@ -51,23 +83,24 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           checked={todo.completed}
           disabled={isLoading(todo.id)}
           onChange={() =>
-            onEditTodo?.(todo.id, { fields: { completed: !todo.completed } })
+            onEditTodo(todo.id, { fields: { completed: !todo.completed } })
           }
         />
       </label>
 
-      {isEditing === todo.id ? (
+      {isEditing ? (
         <form onSubmit={handleSubmit}>
           <input
             ref={titleInputRef}
+            name="title"
             data-cy="TodoTitleField"
             type="text"
             className="todo__title-field"
             placeholder="Empty todo will be deleted"
             value={title}
-            onChange={event => onTitleChange?.(event.target.value)}
-            onBlur={() => onSubmitChanges?.(todo)}
-            onKeyUp={e => onKeyUp?.(e, todo)}
+            onChange={event => setTitle(event.target.value)}
+            onBlur={handleSubmitChanges}
+            onKeyUp={handleKeyUp}
           />
         </form>
       ) : (
@@ -75,7 +108,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           <span
             data-cy="TodoTitle"
             className="todo__title"
-            onDoubleClick={() => onToggleSetEditing?.(todo)}
+            onDoubleClick={handleToggleSetEditing}
           >
             {todo.title}
           </span>
@@ -84,7 +117,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             type="button"
             className="todo__remove"
             data-cy="TodoDelete"
-            onClick={() => onDelete?.(todo.id)}
+            onClick={() => onDelete(todo.id)}
           >
             ×
           </button>

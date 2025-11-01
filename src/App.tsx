@@ -7,38 +7,34 @@ import { TodoList } from './components/TodoList';
 import Footer from './components/Footer';
 import ErrorNotification from './components/ErrorNotification';
 import Header from './components/Header';
-import useTodos from './hooks/useTodos';
+import useTodoData from './hooks/useTodoData';
+import useTodoFilters from './hooks/useTodoFilters';
+import useErrors from './hooks/useErrors';
 
 export const App: React.FC = () => {
+  const { errorMessage, showError, hideError } = useErrors();
+
   const {
     todos,
-    status,
     tempTodo,
-    todosLeft,
-    addInputRef,
-    errorMessage,
-    filteredTodos,
-    hideError,
     handleSubmit,
     handleDelete,
-    getIsTodoLoading,
-    handleStatusChange,
     handleEditTodo,
     handleToggleAllComplete,
     handleDeleteAllCompleted,
+    getIsTodoLoading,
+  } = useTodoData(showError);
 
-    title,
-    titleInputRef,
-    isEditing,
-    setTitle,
-    handleKeyUp,
-    handleSubmitChanges,
-    handleToggleSetEditing,
-  } = useTodos();
+  const { status, filteredTodos, todosLeft, handleStatusChange } =
+    useTodoFilters(todos);
 
   if (!USER_ID) {
     return <UserWarning />;
   }
+
+  const hasCompletedTodos = todos.some(todo => todo.completed);
+  const allTodosCompleted =
+    todos.length > 0 && todos.every(todo => todo.completed);
 
   return (
     <div className="todoapp">
@@ -46,33 +42,26 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <Header
-          addInputRef={addInputRef}
           todos={todos}
+          allTodosCompleted={allTodosCompleted}
           tempTodo={tempTodo}
           onSubmit={handleSubmit}
           onToggleAllComplete={handleToggleAllComplete}
         />
 
         <TodoList
-          titleInputRef={titleInputRef}
           todos={filteredTodos}
           tempTodo={tempTodo}
-          isEditing={isEditing}
-          title={title}
-          onKeyUp={handleKeyUp}
           onDelete={handleDelete}
           isLoading={getIsTodoLoading}
-          onTitleChange={setTitle}
           onEditTodo={handleEditTodo}
-          onSubmitChanges={handleSubmitChanges}
-          onToggleSetEditing={handleToggleSetEditing}
         />
 
         {todos.length > 0 && (
           <Footer
-            todos={todos}
             status={status}
             todosLeft={todosLeft}
+            hasCompletedTodos={hasCompletedTodos}
             onDeleteAll={handleDeleteAllCompleted}
             onStatusChange={handleStatusChange}
           />
